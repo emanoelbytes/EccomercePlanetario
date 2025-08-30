@@ -1,107 +1,154 @@
 /**
  * ========================================
- * PROMPTFORGE - FRAMEWORK DE ARQUITETURA DE PROMPTS
- * Versão: 2.0.0
- * Autor: PromptForge Team
+ * PROMPTFORGE PRO - FRAMEWORK PROFISSIONAL DE ARQUITETURA DE PROMPTS
+ * Versão: 3.0.0 - CORRIGIDA E COMPLETA
+ * Autor: PromptForge Pro Team
  * ========================================
  */
 
 // ========================================
-// VARIÁVEIS GLOBAIS
+// CONFIGURAÇÕES GLOBAIS
+// ========================================
+const CONFIG = {
+    VERSION: '3.0.0',
+    MAX_PHASES: 4,
+    VALIDATION_TIMEOUT: 500,
+    GENERATION_TIMEOUT: 3000,
+    AUTO_SAVE_INTERVAL: 30000
+};
+
+// ========================================
+// ESTADO GLOBAL DA APLICAÇÃO
 // ========================================
 let currentPhase = 1;
 let formData = {};
 let currentRating = 0;
+let appState = {
+    currentPhase: 1,
+    formData: {},
+    validationResults: {},
+    qualityMetrics: {
+        clarityScore: 0,
+        specificityScore: 0,
+        completenessScore: 0,
+        technicalAccuracy: 0,
+        overallRating: 0
+    }
+};
 
 // ========================================
 // FUNÇÕES DE NAVEGAÇÃO ENTRE FASES
 // ========================================
 
-/**
- * Atualiza a barra de progresso
- */
 function updateProgress() {
     const progress = (currentPhase - 1) * 25;
-    document.getElementById('progressFill').style.width = progress + '%';
+    const progressFill = document.getElementById('progressFill');
+    if (progressFill) {
+        progressFill.style.width = progress + '%';
+    }
 }
 
-/**
- * Avança para a próxima fase
- * @param {number} phase - Número da fase de destino
- */
 function nextPhase(phase) {
-    // Validar dados da fase atual
     if (!validateCurrentPhase()) {
         return;
     }
 
-    // Salvar dados da fase atual
     saveCurrentPhaseData();
 
     // Atualizar UI
-    document.getElementById(`phase${currentPhase}`).classList.remove('active');
-    document.querySelector(`[data-phase="${currentPhase}"]`).classList.remove('active');
-    document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('completed');
+    const currentPhaseElement = document.getElementById(`phase${currentPhase}`);
+    const currentPhaseStep = document.querySelector(`[data-phase="${currentPhase}"]`);
+
+    if (currentPhaseElement && currentPhaseStep) {
+        currentPhaseElement.classList.remove('active');
+        currentPhaseStep.classList.remove('active');
+        currentPhaseStep.classList.add('completed');
+    }
 
     currentPhase = phase;
-    document.getElementById(`phase${currentPhase}`).classList.add('active');
-    document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('active');
+    appState.currentPhase = phase;
+
+    const newPhaseElement = document.getElementById(`phase${currentPhase}`);
+    const newPhaseStep = document.querySelector(`[data-phase="${currentPhase}"]`);
+
+    if (newPhaseElement && newPhaseStep) {
+        newPhaseElement.classList.add('active');
+        newPhaseStep.classList.add('active');
+    }
 
     updateProgress();
+    smoothScrollToTop();
 }
 
-/**
- * Retorna para a fase anterior
- * @param {number} phase - Número da fase de destino
- */
 function prevPhase(phase) {
-    document.getElementById(`phase${currentPhase}`).classList.remove('active');
-    document.querySelector(`[data-phase="${currentPhase}"]`).classList.remove('active');
-    document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('pending');
+    const currentPhaseElement = document.getElementById(`phase${currentPhase}`);
+    const currentPhaseStep = document.querySelector(`[data-phase="${currentPhase}"]`);
+
+    if (currentPhaseElement && currentPhaseStep) {
+        currentPhaseElement.classList.remove('active');
+        currentPhaseStep.classList.remove('active');
+        currentPhaseStep.classList.add('pending');
+    }
 
     currentPhase = phase;
-    document.getElementById(`phase${currentPhase}`).classList.add('active');
-    document.querySelector(`[data-phase="${currentPhase}"]`).classList.remove('completed');
-    document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('active');
+    appState.currentPhase = phase;
+
+    const newPhaseElement = document.getElementById(`phase${currentPhase}`);
+    const newPhaseStep = document.querySelector(`[data-phase="${currentPhase}"]`);
+
+    if (newPhaseElement && newPhaseStep) {
+        newPhaseElement.classList.add('active');
+        newPhaseStep.classList.remove('completed');
+        newPhaseStep.classList.add('active');
+    }
 
     updateProgress();
+    smoothScrollToTop();
 }
 
 // ========================================
 // VALIDAÇÃO DE FORMULÁRIOS
 // ========================================
 
-/**
- * Valida os campos da fase atual
- * @returns {boolean} - True se válido, false caso contrário
- */
 function validateCurrentPhase() {
     switch (currentPhase) {
         case 1:
-            const requestText = document.getElementById('requestText').value.trim();
-            const domain = document.getElementById('domain').value;
-            const complexity = document.getElementById('complexity').value;
-            const userLevel = document.getElementById('userLevel').value;
+            const requestText = document.getElementById('requestText')?.value?.trim();
+            const domain = document.getElementById('domain')?.value;
+            const complexity = document.getElementById('complexity')?.value;
+            const userLevel = document.getElementById('userLevel')?.value;
 
             if (!requestText || !domain || !complexity || !userLevel) {
                 showToast('⚠️ Por favor, preencha todos os campos obrigatórios da Fase 1.', 'warning');
                 return false;
             }
+
+            if (requestText.length < 20) {
+                showToast('⚠️ A descrição deve ter pelo menos 20 caracteres.', 'warning');
+                return false;
+            }
             break;
+
         case 2:
-            const outputFormat = document.getElementById('outputFormat').value;
-            const tone = document.getElementById('tone').value;
-            const length = document.getElementById('length').value;
+            const outputFormat = document.getElementById('outputFormat')?.value;
+            const tone = document.getElementById('tone')?.value;
+            const length = document.getElementById('length')?.value;
 
             if (!outputFormat || !tone || !length) {
                 showToast('⚠️ Por favor, preencha todos os campos obrigatórios da Fase 2.', 'warning');
                 return false;
             }
             break;
+
         case 3:
-            const successCriteria = document.getElementById('successCriteria').value.trim();
+            const successCriteria = document.getElementById('successCriteria')?.value?.trim();
             if (!successCriteria) {
                 showToast('⚠️ Por favor, defina os critérios de sucesso na Fase 3.', 'warning');
+                return false;
+            }
+
+            if (successCriteria.length < 30) {
+                showToast('⚠️ Os critérios de sucesso devem ser mais detalhados.', 'warning');
                 return false;
             }
             break;
@@ -109,22 +156,20 @@ function validateCurrentPhase() {
     return true;
 }
 
-/**
- * Salva os dados da fase atual
- */
 function saveCurrentPhaseData() {
     switch (currentPhase) {
         case 1:
-            formData.requestText = document.getElementById('requestText').value;
-            formData.domain = document.getElementById('domain').value;
-            formData.complexity = document.getElementById('complexity').value;
-            formData.userLevel = document.getElementById('userLevel').value;
-            formData.context = document.getElementById('context').value;
+            formData.requestText = document.getElementById('requestText')?.value || '';
+            formData.domain = document.getElementById('domain')?.value || '';
+            formData.complexity = document.getElementById('complexity')?.value || '';
+            formData.userLevel = document.getElementById('userLevel')?.value || '';
+            formData.context = document.getElementById('context')?.value || '';
             break;
+
         case 2:
-            formData.outputFormat = document.getElementById('outputFormat').value;
-            formData.tone = document.getElementById('tone').value;
-            formData.length = document.getElementById('length').value;
+            formData.outputFormat = document.getElementById('outputFormat')?.value || '';
+            formData.tone = document.getElementById('tone')?.value || '';
+            formData.length = document.getElementById('length')?.value || '';
 
             const techniques = [];
             document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
@@ -132,39 +177,53 @@ function saveCurrentPhaseData() {
             });
             formData.techniques = techniques;
             break;
+
         case 3:
-            formData.successCriteria = document.getElementById('successCriteria').value;
-            formData.restrictions = document.getElementById('restrictions').value;
-            formData.examples = document.getElementById('examples').value;
+            formData.successCriteria = document.getElementById('successCriteria')?.value || '';
+            formData.restrictions = document.getElementById('restrictions')?.value || '';
+            formData.examples = document.getElementById('examples')?.value || '';
             break;
     }
+
+    // Salvar no estado global
+    appState.formData[`phase${currentPhase}`] = { ...formData };
+
+    // Auto-salvamento
+    saveToLocalStorage();
 }
 
 // ========================================
 // GERAÇÃO DE PROMPTS
 // ========================================
 
-/**
- * Gera o prompt otimizado
- */
 function generatePrompt() {
     if (!validateCurrentPhase()) return;
+
     saveCurrentPhaseData();
 
     // Mostrar loading
-    document.getElementById('loadingSection').classList.add('show');
+    const loadingSection = document.getElementById('loadingSection');
+    if (loadingSection) {
+        loadingSection.classList.add('show');
+    }
+
     showToast('🔄 Processando sua solicitação...', 'info');
 
     // Simular processamento
     setTimeout(() => {
-        document.getElementById('loadingSection').classList.remove('show');
+        if (loadingSection) {
+            loadingSection.classList.remove('show');
+        }
 
         // Gerar diagnóstico
         generateDiagnostic();
 
         // Gerar prompt otimizado
         const optimizedPrompt = createOptimizedPrompt();
-        document.getElementById('optimizedPrompt').textContent = optimizedPrompt;
+        const optimizedPromptElement = document.getElementById('optimizedPrompt');
+        if (optimizedPromptElement) {
+            optimizedPromptElement.textContent = optimizedPrompt;
+        }
 
         // Gerar documentação
         generateDocumentation();
@@ -179,20 +238,20 @@ function generatePrompt() {
         generateValidationChecklist();
 
         // Mostrar resultados
-        document.getElementById('resultsSection').classList.add('show');
-        document.getElementById('feedbackSection').classList.add('show');
+        const resultsSection = document.getElementById('resultsSection');
+        const feedbackSection = document.getElementById('feedbackSection');
+
+        if (resultsSection) resultsSection.classList.add('show');
+        if (feedbackSection) feedbackSection.classList.add('show');
 
         // Atualizar fase
         nextPhase(4);
 
         // Feedback de sucesso
         showToast('🎉 Prompt gerado com sucesso!', 'success');
-    }, 3000);
+    }, CONFIG.GENERATION_TIMEOUT);
 }
 
-/**
- * Gera o diagnóstico da solicitação
- */
 function generateDiagnostic() {
     const diagnosticHtml = `
         <div class="diagnostic-item">
@@ -212,17 +271,17 @@ function generateDiagnostic() {
         </div>
         <div class="diagnostic-item">
             <h4>Técnicas Aplicadas</h4>
-            <p><strong>${formData.techniques.length} técnicas selecionadas</strong></p>
-            <p>${formData.techniques.join(', ')}</p>
+            <p><strong>${formData.techniques?.length || 0} técnicas selecionadas</strong></p>
+            <p>${formData.techniques?.join(', ') || 'Nenhuma técnica específica'}</p>
         </div>
     `;
-    document.getElementById('diagnosticResults').innerHTML = diagnosticHtml;
+
+    const diagnosticResults = document.getElementById('diagnosticResults');
+    if (diagnosticResults) {
+        diagnosticResults.innerHTML = diagnosticHtml;
+    }
 }
 
-/**
- * Cria o prompt otimizado
- * @returns {string} - Prompt otimizado
- */
 function createOptimizedPrompt() {
     const persona = getPersonaByDomain(formData.domain);
     const context = buildContext();
@@ -253,16 +312,11 @@ ${enhancedTask}${examples}${constraints}
 Execute a tarefa seguindo rigorosamente todos os parâmetros acima, mantendo foco na qualidade, usabilidade e alinhamento com os objetivos especificados.`;
 }
 
-/**
- * Enriquece a descrição da tarefa com contexto específico
- * @returns {string} - Tarefa enriquecida
- */
 function enhanceTaskDescription() {
-    // Analisar e enriquecer a tarefa original com base no contexto
-    let enhancedTask = formData.requestText;
+    let enhancedTask = formData.requestText || '';
 
     // Adicionar contexto específico baseado no domínio
-    if (formData.domain === 'comercial' && formData.requestText.toLowerCase().includes('site')) {
+    if (formData.domain === 'comercial' && formData.requestText?.toLowerCase().includes('site')) {
         enhancedTask += `\n\n🎨 ESPECIFICAÇÕES TÉCNICAS ADICIONAIS:
 - Interface responsiva (mobile-first)
 - Sistema de carrinho de compras funcional
@@ -288,11 +342,6 @@ function enhanceTaskDescription() {
     return enhancedTask;
 }
 
-/**
- * Obtém a persona baseada no domínio
- * @param {string} domain - Domínio selecionado
- * @returns {string} - Descrição da persona
- */
 function getPersonaByDomain(domain) {
     const personas = {
         'tecnico': 'Você é um Arquiteto de Software Sênior com 10+ anos de experiência em desenvolvimento full-stack e arquitetura de sistemas escaláveis. Sua expertise combina conhecimento profundo em tecnologias modernas com capacidade de criar soluções robustas e bem documentadas.',
@@ -305,10 +354,6 @@ function getPersonaByDomain(domain) {
     return personas[domain] || personas['tecnico'];
 }
 
-/**
- * Constrói o contexto operacional
- * @returns {string} - Contexto formatado
- */
 function buildContext() {
     const contextParts = [
         `📊 Domínio: ${getDomainLabel(formData.domain)}`,
@@ -325,30 +370,26 @@ function buildContext() {
     return contextParts.join('\n');
 }
 
-/**
- * Constrói as instruções de execução
- * @returns {string} - Instruções formatadas
- */
 function buildInstructions() {
     const instructions = [];
 
     // Instruções baseadas nas técnicas selecionadas
-    if (formData.techniques.includes('chain-of-thought')) {
+    if (formData.techniques?.includes('chain-of-thought')) {
         instructions.push('🧠 RACIOCÍNIO ESTRUTURADO: Demonstre seu processo de pensamento passo-a-passo');
     }
-    if (formData.techniques.includes('few-shot')) {
+    if (formData.techniques?.includes('few-shot')) {
         instructions.push('💡 EXEMPLOS PRÁTICOS: Forneça exemplos concretos para ilustrar cada conceito');
     }
-    if (formData.techniques.includes('role-playing')) {
+    if (formData.techniques?.includes('role-playing')) {
         instructions.push('🎭 CONSISTÊNCIA DE PERSONA: Mantenha o papel especializado durante toda a resposta');
     }
-    if (formData.techniques.includes('step-by-step')) {
+    if (formData.techniques?.includes('step-by-step')) {
         instructions.push('📋 ESTRUTURA SEQUENCIAL: Organize a resposta em etapas claras e lógicas');
     }
-    if (formData.techniques.includes('examples')) {
+    if (formData.techniques?.includes('examples')) {
         instructions.push('🔍 APLICAÇÕES REAIS: Inclua casos de uso específicos e aplicáveis');
     }
-    if (formData.techniques.includes('constraints')) {
+    if (formData.techniques?.includes('constraints')) {
         instructions.push('⚠️ LIMITAÇÕES: Respeite rigorosamente todas as restrições especificadas');
     }
 
@@ -361,7 +402,7 @@ function buildInstructions() {
         'tecnico': '💻 PRECISÃO TÉCNICA: Use terminologia correta e soluções testadas',
         'criativo': '🎨 INOVAÇÃO: Explore soluções originais e visualmente atrativas',
         'analitico': '📊 BASE DE DADOS: Fundamente decisões em análises e métricas',
-        'estrategico': '🎯 VISÃO HOLÍSTICA: Consider impact a longo prazo e objetivos globais',
+        'estrategico': '🎯 VISÃO HOLÍSTICA: Considere impacto a longo prazo e objetivos globais',
         'educacional': '📚 DIDÁTICA: Estruture para facilitar aprendizado e compreensão',
         'comercial': '💰 FOCO EM RESULTADOS: Priorize ROI, conversão e experiência do usuário'
     };
@@ -373,10 +414,6 @@ function buildInstructions() {
     return instructions.join('\n');
 }
 
-/**
- * Constrói as instruções de formato
- * @returns {string} - Instruções de formato
- */
 function buildFormatInstructions() {
     const formatInstructions = {
         'texto': '📄 FORMATO: Texto bem estruturado com parágrafos organizados, títulos claros e transições suaves entre ideias.',
@@ -395,15 +432,12 @@ function buildFormatInstructions() {
 // GERAÇÃO DE DOCUMENTAÇÃO
 // ========================================
 
-/**
- * Gera a documentação do processo
- */
 function generateDocumentation() {
     const doc = `
         <h4>Decisões de Design Tomadas:</h4>
         <ul>
             <li><strong>Persona Selecionada:</strong> ${getPersonaByDomain(formData.domain).split('.')[0]} - Escolhida pela expertise no domínio ${getDomainLabel(formData.domain).toLowerCase()}</li>
-            <li><strong>Técnicas Aplicadas:</strong> ${formData.techniques.join(', ') || 'Nenhuma específica'} - Selecionadas para otimizar a qualidade da resposta</li>
+            <li><strong>Técnicas Aplicadas:</strong> ${formData.techniques?.join(', ') || 'Nenhuma específica'} - Selecionadas para otimizar a qualidade da resposta</li>
             <li><strong>Estrutura de Contexto:</strong> Inclui domínio, complexidade e perfil do usuário para direcionamento preciso</li>
             <li><strong>Formato de Saída:</strong> ${getFormatLabel(formData.outputFormat)} - Otimizado para o tipo de conteúdo solicitado</li>
         </ul>
@@ -412,12 +446,13 @@ function generateDocumentation() {
         <p>A estrutura do prompt foi otimizada considerando os princípios de clareza, especificidade e direcionamento contextual. 
         A persona escolhida estabelece autoridade e tom apropriado, enquanto as instruções detalhadas garantem consistência na execução.</p>
     `;
-    document.getElementById('processDocumentation').innerHTML = doc;
+
+    const processDocumentation = document.getElementById('processDocumentation');
+    if (processDocumentation) {
+        processDocumentation.innerHTML = doc;
+    }
 }
 
-/**
- * Gera o guia de personalização
- */
 function generateCustomizationGuide() {
     const guide = `
         <h4>Como Personalizar Este Prompt:</h4>
@@ -435,12 +470,13 @@ function generateCustomizationGuide() {
             <li><code>[RESTRIÇÕES]</code> - Adicione limitações específicas</li>
         </ul>
     `;
-    document.getElementById('customizationGuide').innerHTML = guide;
+
+    const customizationGuide = document.getElementById('customizationGuide');
+    if (customizationGuide) {
+        customizationGuide.innerHTML = guide;
+    }
 }
 
-/**
- * Gera versões alternativas do prompt
- */
 function generateAlternativeVersions() {
     const version1 = createOptimizedPrompt().replace('INSTRUÇÕES DETALHADAS:', 'DIRETRIZES ESPECÍFICAS:');
     const version2 = createOptimizedPrompt().replace('Você é um', 'Atue como um');
@@ -458,12 +494,13 @@ function generateAlternativeVersions() {
             <li><strong>Versão 2:</strong> Para interações mais conversacionais e criativas</li>
         </ul>
     `;
-    document.getElementById('alternativeVersions').innerHTML = versions;
+
+    const alternativeVersions = document.getElementById('alternativeVersions');
+    if (alternativeVersions) {
+        alternativeVersions.innerHTML = versions;
+    }
 }
 
-/**
- * Gera o checklist de validação
- */
 function generateValidationChecklist() {
     const checklist = `
         <h4>Critérios de Validação:</h4>
@@ -486,18 +523,17 @@ function generateValidationChecklist() {
             <li><strong>Escalabilidade:</strong> Permite adaptações futuras? ✓/✗</li>
         </ul>
     `;
-    document.getElementById('validationChecklist').innerHTML = checklist;
+
+    const validationChecklist = document.getElementById('validationChecklist');
+    if (validationChecklist) {
+        validationChecklist.innerHTML = checklist;
+    }
 }
 
 // ========================================
 // FUNÇÕES AUXILIARES
 // ========================================
 
-/**
- * Obtém o label do domínio
- * @param {string} domain - Domínio
- * @returns {string} - Label formatado
- */
 function getDomainLabel(domain) {
     const labels = {
         'tecnico': 'Técnico',
@@ -510,11 +546,6 @@ function getDomainLabel(domain) {
     return labels[domain] || domain;
 }
 
-/**
- * Obtém o label da complexidade
- * @param {string} complexity - Complexidade
- * @returns {string} - Label formatado
- */
 function getComplexityLabel(complexity) {
     const labels = {
         'simples': 'Simples',
@@ -525,11 +556,6 @@ function getComplexityLabel(complexity) {
     return labels[complexity] || complexity;
 }
 
-/**
- * Obtém o label do nível do usuário
- * @param {string} level - Nível
- * @returns {string} - Label formatado
- */
 function getUserLevelLabel(level) {
     const labels = {
         'iniciante': 'Iniciante',
@@ -540,11 +566,6 @@ function getUserLevelLabel(level) {
     return labels[level] || level;
 }
 
-/**
- * Obtém o label do tom
- * @param {string} tone - Tom
- * @returns {string} - Label formatado
- */
 function getToneLabel(tone) {
     const labels = {
         'profissional': 'Profissional',
@@ -557,11 +578,6 @@ function getToneLabel(tone) {
     return labels[tone] || tone;
 }
 
-/**
- * Obtém o label do formato
- * @param {string} format - Formato
- * @returns {string} - Label formatado
- */
 function getFormatLabel(format) {
     const labels = {
         'texto': 'Texto corrido',
@@ -575,11 +591,6 @@ function getFormatLabel(format) {
     return labels[format] || format;
 }
 
-/**
- * Obtém o label da extensão
- * @param {string} length - Extensão
- * @returns {string} - Label formatado
- */
 function getLengthLabel(length) {
     const labels = {
         'concisa': 'Concisa',
@@ -594,10 +605,6 @@ function getLengthLabel(length) {
 // FUNCIONALIDADES DE CLIPBOARD
 // ========================================
 
-/**
- * Copia texto para a área de transferência
- * @param {string} elementId - ID do elemento a ser copiado
- */
 function copyToClipboard(elementId) {
     const element = document.getElementById(elementId);
     if (!element) {
@@ -629,10 +636,6 @@ function copyToClipboard(elementId) {
     }
 }
 
-/**
- * Método fallback para cópia
- * @param {string} text - Texto a ser copiado
- */
 function fallbackCopyMethod(text) {
     try {
         // Criar elemento temporário
@@ -668,14 +671,10 @@ function fallbackCopyMethod(text) {
     } catch (err) {
         console.error('Erro no método fallback:', err);
         showToast('⚠️ Erro na cópia automática. Abrindo modal para cópia manual...', 'warning');
-        // Último recurso - mostrar modal com texto para cópia manual
         showManualCopyModal(text);
     }
 }
 
-/**
- * Mostra sucesso na cópia
- */
 function showCopySuccess() {
     // Encontrar o botão que foi clicado
     const buttons = document.querySelectorAll('button');
@@ -706,10 +705,6 @@ function showCopySuccess() {
     showToast('✅ Prompt copiado para área de transferência!', 'success');
 }
 
-/**
- * Mostra modal para cópia manual
- * @param {string} text - Texto a ser copiado
- */
 function showManualCopyModal(text) {
     const modal = document.createElement('div');
     modal.style.cssText = `
@@ -760,11 +755,6 @@ function showManualCopyModal(text) {
 // SISTEMA DE NOTIFICAÇÕES
 // ========================================
 
-/**
- * Mostra notificação toast
- * @param {string} message - Mensagem a ser exibida
- * @param {string} type - Tipo da notificação (success, warning, error, info)
- */
 function showToast(message, type = 'success') {
     // Remover toast existente
     const existingToast = document.querySelector('.toast-notification');
@@ -838,11 +828,8 @@ function showToast(message, type = 'success') {
 // SISTEMA DE FEEDBACK
 // ========================================
 
-/**
- * Submete o feedback do usuário
- */
 function submitFeedback() {
-    const feedbackText = document.getElementById('feedbackText').value;
+    const feedbackText = document.getElementById('feedbackText')?.value || '';
     const rating = currentRating;
 
     if (rating === 0) {
@@ -854,19 +841,32 @@ function submitFeedback() {
     showToast(`✅ Feedback enviado! Avaliação: ${rating}/5 estrelas.\nObrigado por contribuir para melhorar o PromptForge!`, 'success');
 
     // Reset feedback
-    document.getElementById('feedbackText').value = '';
+    const feedbackTextElement = document.getElementById('feedbackText');
+    if (feedbackTextElement) {
+        feedbackTextElement.value = '';
+    }
+
     document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
     currentRating = 0;
 }
 
-/**
- * Inicia uma nova análise
- */
 function startOver() {
     // Reset all data
     formData = {};
     currentRating = 0;
     currentPhase = 1;
+    appState = {
+        currentPhase: 1,
+        formData: {},
+        validationResults: {},
+        qualityMetrics: {
+            clarityScore: 0,
+            specificityScore: 0,
+            completenessScore: 0,
+            technicalAccuracy: 0,
+            overallRating: 0
+        }
+    };
 
     // Reset form fields
     document.querySelectorAll('input, textarea, select').forEach(field => {
@@ -887,18 +887,29 @@ function startOver() {
     });
 
     // Reset results
-    document.getElementById('resultsSection').classList.remove('show');
-    document.getElementById('feedbackSection').classList.remove('show');
+    const resultsSection = document.getElementById('resultsSection');
+    const feedbackSection = document.getElementById('feedbackSection');
+
+    if (resultsSection) resultsSection.classList.remove('show');
+    if (feedbackSection) feedbackSection.classList.remove('show');
 
     // Start from phase 1
-    document.getElementById('phase1').classList.add('active');
-    document.querySelector('[data-phase="1"]').classList.remove('pending');
-    document.querySelector('[data-phase="1"]').classList.add('active');
+    const phase1 = document.getElementById('phase1');
+    const phase1Step = document.querySelector('[data-phase="1"]');
+
+    if (phase1 && phase1Step) {
+        phase1.classList.add('active');
+        phase1Step.classList.remove('pending');
+        phase1Step.classList.add('active');
+    }
 
     updateProgress();
 
     // Smooth scroll to top
-    document.querySelector('.main-card').scrollIntoView({ behavior: 'smooth' });
+    const mainCard = document.querySelector('.main-card');
+    if (mainCard) {
+        mainCard.scrollIntoView({ behavior: 'smooth' });
+    }
 
     // Feedback visual
     showToast('🔄 Nova análise iniciada!', 'info');
@@ -908,23 +919,20 @@ function startOver() {
 // FUNÇÕES DE NAVEGAÇÃO SUAVE
 // ========================================
 
-/**
- * Navega suavemente para o topo
- */
 function smoothScrollToTop() {
-    document.querySelector('.phase-indicator').scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-    });
+    const phaseIndicator = document.querySelector('.phase-indicator');
+    if (phaseIndicator) {
+        phaseIndicator.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
 }
 
 // ========================================
 // VALIDAÇÃO EM TEMPO REAL
 // ========================================
 
-/**
- * Adiciona validação em tempo real para campos obrigatórios
- */
 function addRealTimeValidation() {
     const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
 
@@ -948,56 +956,163 @@ function addRealTimeValidation() {
     });
 }
 
-/**
- * Marca campos obrigatórios
- */
 function markRequiredFields() {
     // Fase 1
-    document.getElementById('requestText').setAttribute('required', 'required');
-    document.getElementById('domain').setAttribute('required', 'required');
-    document.getElementById('complexity').setAttribute('required', 'required');
-    document.getElementById('userLevel').setAttribute('required', 'required');
+    const requestText = document.getElementById('requestText');
+    const domain = document.getElementById('domain');
+    const complexity = document.getElementById('complexity');
+    const userLevel = document.getElementById('userLevel');
+
+    if (requestText) requestText.setAttribute('required', 'required');
+    if (domain) domain.setAttribute('required', 'required');
+    if (complexity) complexity.setAttribute('required', 'required');
+    if (userLevel) userLevel.setAttribute('required', 'required');
 
     // Fase 2
-    document.getElementById('outputFormat').setAttribute('required', 'required');
-    document.getElementById('tone').setAttribute('required', 'required');
-    document.getElementById('length').setAttribute('required', 'required');
+    const outputFormat = document.getElementById('outputFormat');
+    const tone = document.getElementById('tone');
+    const length = document.getElementById('length');
+
+    if (outputFormat) outputFormat.setAttribute('required', 'required');
+    if (tone) tone.setAttribute('required', 'required');
+    if (length) length.setAttribute('required', 'required');
 
     // Fase 3
-    document.getElementById('successCriteria').setAttribute('required', 'required');
+    const successCriteria = document.getElementById('successCriteria');
+    if (successCriteria) successCriteria.setAttribute('required', 'required');
 }
 
 // ========================================
 // EVENT LISTENERS
 // ========================================
 
-/**
- * Adiciona event listeners para o sistema de avaliação
- */
 function addRatingListeners() {
-    document.getElementById('ratingStars').addEventListener('click', (e) => {
-        if (e.target.classList.contains('star')) {
-            const rating = parseInt(e.target.dataset.rating);
-            currentRating = rating;
+    const ratingStars = document.getElementById('ratingStars');
+    if (ratingStars) {
+        ratingStars.addEventListener('click', (e) => {
+            if (e.target.classList.contains('star')) {
+                const rating = parseInt(e.target.dataset.rating);
+                currentRating = rating;
 
-            document.querySelectorAll('.star').forEach((star, index) => {
-                if (index < rating) {
-                    star.classList.add('active');
-                } else {
-                    star.classList.remove('active');
-                }
-            });
+                document.querySelectorAll('.star').forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.add('active');
+                    } else {
+                        star.classList.remove('active');
+                    }
+                });
+            }
+        });
+    }
+}
+
+// ========================================
+// FUNÇÕES DE PERSISTÊNCIA
+// ========================================
+
+function saveToLocalStorage() {
+    try {
+        const stateData = {
+            formData: appState.formData,
+            currentPhase: appState.currentPhase,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('promptForgeState', JSON.stringify(stateData));
+    } catch (error) {
+        console.warn('Falha no salvamento local:', error);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const savedState = localStorage.getItem('promptForgeState');
+        if (savedState) {
+            const stateData = JSON.parse(savedState);
+            appState = { ...appState, ...stateData };
+            currentPhase = appState.currentPhase;
+            formData = appState.formData;
+
+            // Restaurar campos do formulário
+            restoreFormFields();
+            updateProgress();
         }
-    });
+    } catch (error) {
+        console.warn('Falha no carregamento local:', error);
+    }
+}
+
+function restoreFormFields() {
+    // Restaurar campos da Fase 1
+    if (formData.requestText) {
+        const requestText = document.getElementById('requestText');
+        if (requestText) requestText.value = formData.requestText;
+    }
+
+    if (formData.domain) {
+        const domain = document.getElementById('domain');
+        if (domain) domain.value = formData.domain;
+    }
+
+    if (formData.complexity) {
+        const complexity = document.getElementById('complexity');
+        if (complexity) complexity.value = formData.complexity;
+    }
+
+    if (formData.userLevel) {
+        const userLevel = document.getElementById('userLevel');
+        if (userLevel) userLevel.value = formData.userLevel;
+    }
+
+    if (formData.context) {
+        const context = document.getElementById('context');
+        if (context) context.value = formData.context;
+    }
+
+    // Restaurar campos da Fase 2
+    if (formData.outputFormat) {
+        const outputFormat = document.getElementById('outputFormat');
+        if (outputFormat) outputFormat.value = formData.outputFormat;
+    }
+
+    if (formData.tone) {
+        const tone = document.getElementById('tone');
+        if (tone) tone.value = formData.tone;
+    }
+
+    if (formData.length) {
+        const length = document.getElementById('length');
+        if (length) length.value = formData.length;
+    }
+
+    // Restaurar técnicas selecionadas
+    if (formData.techniques) {
+        formData.techniques.forEach(technique => {
+            const checkbox = document.querySelector(`input[value="${technique}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+
+    // Restaurar campos da Fase 3
+    if (formData.successCriteria) {
+        const successCriteria = document.getElementById('successCriteria');
+        if (successCriteria) successCriteria.value = formData.successCriteria;
+    }
+
+    if (formData.restrictions) {
+        const restrictions = document.getElementById('restrictions');
+        if (restrictions) restrictions.value = formData.restrictions;
+    }
+
+    if (formData.examples) {
+        const examples = document.getElementById('examples');
+        if (examples) examples.value = formData.examples;
+    }
 }
 
 // ========================================
 // INICIALIZAÇÃO
 // ========================================
 
-/**
- * Inicializa a aplicação quando o DOM estiver carregado
- */
 document.addEventListener('DOMContentLoaded', function () {
     // Marcar campos obrigatórios
     markRequiredFields();
@@ -1008,24 +1123,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Adicionar listeners para avaliação
     addRatingListeners();
 
+    // Carregar estado salvo
+    loadFromLocalStorage();
+
     // Inicializar progresso
     updateProgress();
+
+    // Mostrar mensagem de boas-vindas
+    showToast('🚀 PromptForge Pro carregado com sucesso!', 'success');
 });
 
 // ========================================
-// FUNÇÕES DE NAVEGAÇÃO APRIMORADAS
+// EXPORTAÇÃO DE FUNÇÕES PARA HTML
 // ========================================
-
-// Enhance phase transitions with smooth scrolling
-const originalNextPhase = nextPhase;
-const originalPrevPhase = prevPhase;
-
-nextPhase = function (phase) {
-    originalNextPhase(phase);
-    setTimeout(smoothScrollToTop, 100);
-};
-
-prevPhase = function (phase) {
-    originalPrevPhase(phase);
-    setTimeout(smoothScrollToTop, 100);
-};
+// Todas as funções necessárias já estão definidas globalmente
