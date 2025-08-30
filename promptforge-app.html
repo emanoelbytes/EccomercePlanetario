@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptForge - Arquitetura de Prompts Profissional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header h1::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: headerShimmer 3s infinite;
+        }
+
+        @keyframes headerShimmer {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .header .tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .main-card:hover::before {
+            opacity: 1;
+        }
+
+        .phase-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+
+        .phase-step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .phase-step::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .phase-step:hover::before {
+            opacity: 0.3;
+        }
+
+        .phase-step.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .phase-step.completed {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .phase-step.pending {
+            background: #f0f0f0;
+            color: #999;
+        }
+
+        .phase-content {
+            display: none;
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phase-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.01), rgba(118, 75, 162, 0.01));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .phase-content.active {
+            display: block;
+        }
+
+        .phase-content.active::before {
+            opacity: 1;
+        }
+
+        .phase-content.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 2px;
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+            font-size: 14px;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .form-group label::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .form-group:focus-within label::after {
+            width: 100%;
+        }
+
+        .form-group:focus-within label {
+            color: #667eea;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            position: relative;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #999;
+            transition: color 0.3s ease;
+        }
+
+        .form-group input:focus::placeholder,
+        .form-group textarea:focus::placeholder {
+            color: #667eea;
+            opacity: 0.7;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Melhorias de acessibilidade */
+        .form-group input:invalid,
+        .form-group textarea:invalid,
+        .form-group select:invalid {
+            border-color: #F44336;
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+        }
+
+        .form-group input:valid,
+        .form-group textarea:valid,
+        .form-group select:valid {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        /* Melhorias para checkboxes */
+        .form-group div[style*="grid"] label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .form-group div[style*="grid"] label:hover {
+            background: #e9ecef;
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .form-group div[style*="grid"] input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            margin-right: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-secondary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-secondary:hover::before {
+            left: 100%;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .results-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .results-section:hover::before {
+            opacity: 1;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .results-section.show::before {
+            opacity: 1;
+        }
+
+        .result-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .result-card:hover::before {
+            opacity: 1;
+        }
+
+        .result-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .result-card pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            position: relative;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-card pre::before {
+            content: '📋';
+            position: absolute;
+            top: -8px;
+            left: 10px;
+            background: white;
+            padding: 0 5px;
+            font-size: 12px;
+            color: #667eea;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .loading::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: 15px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .loading.show::before {
+            opacity: 1;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .spinner::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border: 2px solid transparent;
+            border-top: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite reverse;
+        }
+
+        .diagnostic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .diagnostic-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .diagnostic-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .diagnostic-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .diagnostic-item:hover::before {
+            opacity: 1;
+        }
+
+        .diagnostic-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .diagnostic-item h4::before {
+            content: '🔍';
+            font-size: 14px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .feedback-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feedback-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .feedback-section.show {
+            display: block;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .feedback-section.show::before {
+            opacity: 1;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+        }
+
+        .star {
+            font-size: 24px;
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #ffd700;
+            transform: scale(1.2);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .star::before {
+            content: '★';
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s ease;
+        }
+
+        .star:hover::before,
+        .star.active::before {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Responsividade Mobile e Web */
+        @media (max-width: 1200px) {
+            .container {
+                max-width: 95%;
+                padding: 15px;
+            }
+
+            .diagnostic-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                margin-bottom: 25px;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+                margin-bottom: 8px;
+            }
+
+            .header .tagline {
+                font-size: 1rem;
+            }
+
+            .main-card {
+                padding: 20px 15px;
+                border-radius: 15px;
+            }
+
+            .phase-indicator {
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 25px;
+            }
+
+            .phase-step {
+                width: 35px;
+                height: 35px;
+                font-size: 12px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-group label {
+                font-size: 13px;
+                margin-bottom: 6px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                padding: 10px 12px;
+                font-size: 15px;
+                border-radius: 8px;
+            }
+
+            .form-group textarea {
+                min-height: 100px;
+            }
+
+            .btn {
+                padding: 12px 25px;
+                font-size: 14px;
+                border-radius: 20px;
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .btn-secondary {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .result-card {
+                padding: 20px 15px;
+                margin-bottom: 15px;
+                border-radius: 10px;
+            }
+
+            .result-card h3 {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+
+            .result-card pre {
+                padding: 12px;
+                font-size: 13px;
+                border-radius: 6px;
+            }
+
+            .diagnostic-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .diagnostic-item {
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .diagnostic-item h4 {
+                font-size: 0.95rem;
+                margin-bottom: 6px;
+            }
+
+            .diagnostic-item p {
+                font-size: 0.9rem;
+            }
+
+            .loading {
+                padding: 30px 15px;
+            }
+
+            .loading p {
+                font-size: 0.9rem;
+            }
+
+            .results-section {
+                padding: 20px 15px;
+                margin-top: 20px;
+            }
+
+            .feedback-section {
+                padding: 20px 15px;
+                margin-top: 20px;
+            }
+
+            .rating-stars {
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .star {
+                font-size: 28px;
+            }
+
+            /* Ajustes para técnicas em grid */
+            .form-group div[style*="grid"] {
+                grid-template-columns: 1fr !important;
+                gap: 8px !important;
+            }
+
+            .form-group div[style*="grid"] label {
+                font-size: 14px;
+                padding: 8px;
+                background: #f8f9fa;
+                border-radius: 5px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .form-group div[style*="grid"] input[type="checkbox"] {
+                width: auto;
+                margin: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 8px;
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .header .tagline {
+                font-size: 0.9rem;
+            }
+
+            .main-card {
+                padding: 15px 10px;
+                border-radius: 12px;
+            }
+
+            .phase-indicator {
+                gap: 6px;
+                margin-bottom: 20px;
+            }
+
+            .phase-step {
+                width: 30px;
+                height: 30px;
+                font-size: 11px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                padding: 8px 10px;
+                font-size: 14px;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 13px;
+            }
+
+            .result-card {
+                padding: 15px 10px;
+            }
+
+            .result-card h3 {
+                font-size: 1rem;
+            }
+
+            .result-card pre {
+                padding: 10px;
+                font-size: 12px;
+                max-height: 150px;
+            }
+
+            .diagnostic-item {
+                padding: 10px;
+            }
+
+            .star {
+                font-size: 24px;
+            }
+
+            /* Melhor organização dos botões em mobile */
+            .button-group {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 20px;
+            }
+
+            .button-group .btn {
+                width: 100%;
+                margin: 0;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .main-card {
+                padding: 12px 8px;
+            }
+
+            .phase-step {
+                width: 28px;
+                height: 28px;
+                font-size: 10px;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                font-size: 13px;
+                padding: 7px 9px;
+            }
+
+            .btn {
+                font-size: 12px;
+                padding: 9px 18px;
+            }
+        }
+
+        /* Responsividade para tablets */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                max-width: 90%;
+                padding: 15px;
+            }
+
+            .main-card {
+                padding: 35px 25px;
+            }
+
+            .diagnostic-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 18px;
+            }
+
+            .form-group div[style*="grid"] {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+
+            .btn {
+                width: auto;
+                display: inline-block;
+            }
+        }
+
+        /* Melhorias para telas muito grandes */
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1400px;
+            }
+
+            .main-card {
+                padding: 50px;
+            }
+
+            .diagnostic-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 25px;
+            }
+
+            .form-group div[style*="grid"] {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .btn {
+                min-height: 48px;
+                touch-action: manipulation;
+            }
+
+            .phase-step {
+                min-height: 44px;
+                min-width: 44px;
+            }
+
+            .star {
+                min-height: 44px;
+                min-width: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                min-height: 44px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PromptForge</h1>
+            <p class="tagline">Framework Avançado de Arquitetura de Prompts</p>
+        </div>
+
+        <div class="main-card">
+            <div class="phase-indicator">
+                <div class="phase-step active" data-phase="1">1</div>
+                <div class="phase-step pending" data-phase="2">2</div>
+                <div class="phase-step pending" data-phase="3">3</div>
+                <div class="phase-step pending" data-phase="4">4</div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- FASE 1: DIAGNÓSTICO INTELIGENTE -->
+            <div class="phase-content active" id="phase1">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🔍 Fase 1: Diagnóstico Inteligente</h2>
+
+                <div class="form-group">
+                    <label for="requestText">Descreva sua solicitação ou problema:</label>
+                    <textarea id="requestText"
+                        placeholder="Ex: Preciso de um prompt para criar conteúdo de marketing para redes sociais..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="domain">Domínio de Conhecimento:</label>
+                    <select id="domain">
+                        <option value="">Selecione o domínio</option>
+                        <option value="tecnico">Técnico</option>
+                        <option value="criativo">Criativo</option>
+                        <option value="analitico">Analítico</option>
+                        <option value="estrategico">Estratégico</option>
+                        <option value="educacional">Educacional</option>
+                        <option value="comercial">Comercial</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="complexity">Nível de Complexidade:</label>
+                    <select id="complexity">
+                        <option value="">Selecione a complexidade</option>
+                        <option value="simples">Simples</option>
+                        <option value="intermediaria">Intermediária</option>
+                        <option value="complexa">Complexa</option>
+                        <option value="especializada">Especializada</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="userLevel">Nível de Experiência do Usuário Final:</label>
+                    <select id="userLevel">
+                        <option value="">Selecione o nível</option>
+                        <option value="iniciante">Iniciante</option>
+                        <option value="intermediario">Intermediário</option>
+                        <option value="avancado">Avançado</option>
+                        <option value="especialista">Especialista</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="context">Contexto Adicional (opcional):</label>
+                    <textarea id="context"
+                        placeholder="Forneça informações sobre o contexto, público-alvo, restrições, etc."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn" onclick="nextPhase(2)">Próxima Fase →</button>
+                </div>
+            </div>
+
+            <!-- FASE 2: ARQUITETURA DO PROMPT -->
+            <div class="phase-content" id="phase2">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🏗️ Fase 2: Arquitetura do Prompt</h2>
+
+                <div class="form-group">
+                    <label for="outputFormat">Formato de Saída Desejado:</label>
+                    <select id="outputFormat">
+                        <option value="">Selecione o formato</option>
+                        <option value="texto">Texto corrido</option>
+                        <option value="lista">Lista estruturada</option>
+                        <option value="tabela">Tabela</option>
+                        <option value="json">JSON</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="codigo">Código</option>
+                        <option value="relatorio">Relatório detalhado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="techniques">Técnicas Avançadas (selecione todas que se aplicam):</label>
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 10px;">
+                        <label><input type="checkbox" value="chain-of-thought"> Chain-of-Thought</label>
+                        <label><input type="checkbox" value="few-shot"> Few-Shot Learning</label>
+                        <label><input type="checkbox" value="role-playing"> Role-Playing</label>
+                        <label><input type="checkbox" value="step-by-step"> Passo a Passo</label>
+                        <label><input type="checkbox" value="examples"> Exemplos Práticos</label>
+                        <label><input type="checkbox" value="constraints"> Restrições Claras</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tone">Tom e Estilo:</label>
+                    <select id="tone">
+                        <option value="">Selecione o tom</option>
+                        <option value="profissional">Profissional</option>
+                        <option value="casual">Casual</option>
+                        <option value="tecnico">Técnico</option>
+                        <option value="criativo">Criativo</option>
+                        <option value="educativo">Educativo</option>
+                        <option value="persuasivo">Persuasivo</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="length">Extensão Desejada da Resposta:</label>
+                    <select id="length">
+                        <option value="">Selecione a extensão</option>
+                        <option value="concisa">Concisa (1-2 parágrafos)</option>
+                        <option value="media">Média (3-5 parágrafos)</option>
+                        <option value="detalhada">Detalhada (6-10 parágrafos)</option>
+                        <option value="extensa">Extensa (mais de 10 parágrafos)</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-secondary btn" onclick="prevPhase(1)">← Fase Anterior</button>
+                    <button class="btn" onclick="nextPhase(3)">Próxima Fase →</button>
+                </div>
+            </div>
+
+            <!-- FASE 3: VALIDAÇÃO E OTIMIZAÇÃO -->
+            <div class="phase-content" id="phase3">
+                <h2 style="color: #667eea; margin-bottom: 20px;">✅ Fase 3: Validação e Otimização</h2>
+
+                <div class="form-group">
+                    <label for="successCriteria">Critérios de Sucesso:</label>
+                    <textarea id="successCriteria"
+                        placeholder="Como você saberá que o prompt funcionou bem? Liste os critérios mensuráveis..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="restrictions">Restrições ou Limitações:</label>
+                    <textarea id="restrictions"
+                        placeholder="Há algo que deve ser evitado ou limitado na resposta?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="examples">Exemplos de Entrada e Saída Esperada (opcional):</label>
+                    <textarea id="examples"
+                        placeholder="Forneça exemplos específicos do que você espera como entrada e saída..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-secondary btn" onclick="prevPhase(2)">← Fase Anterior</button>
+                    <button class="btn" onclick="generatePrompt()">Gerar Prompt →</button>
+                </div>
+            </div>
+
+            <!-- FASE 4: ENTREGA ESTRUTURADA -->
+            <div class="phase-content" id="phase4">
+                <h2 style="color: #667eea; margin-bottom: 20px;">🚀 Fase 4: Entrega Estruturada</h2>
+
+                <div class="loading" id="loadingSection">
+                    <div class="spinner"></div>
+                    <p>Processando análise e gerando prompt otimizado...</p>
+                </div>
+
+                <div class="results-section" id="resultsSection">
+                    <div id="diagnosticResults" class="diagnostic-grid"></div>
+
+                    <div class="result-card">
+                        <h3>🎯 Prompt Otimizado Finalizado</h3>
+                        <pre id="optimizedPrompt"></pre>
+                        <div class="button-group" style="margin-top: 10px;">
+                            <button class="btn" onclick="copyToClipboard('optimizedPrompt')">Copiar Prompt</button>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>📋 Documentação do Processo</h3>
+                        <div id="processDocumentation"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>🔧 Guia de Personalização</h3>
+                        <div id="customizationGuide"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>🔀 Variações Alternativas</h3>
+                        <div id="alternativeVersions"></div>
+                    </div>
+
+                    <div class="result-card">
+                        <h3>✅ Checklist de Validação</h3>
+                        <div id="validationChecklist"></div>
+                    </div>
+                </div>
+
+                <div class="feedback-section" id="feedbackSection">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">💬 Avalie o Resultado</h3>
+                    <p>Como você avalia a qualidade do prompt gerado?</p>
+                    <div class="rating-stars" id="ratingStars">
+                        <span class="star" data-rating="1">★</span>
+                        <span class="star" data-rating="2">★</span>
+                        <span class="star" data-rating="3">★</span>
+                        <span class="star" data-rating="4">★</span>
+                        <span class="star" data-rating="5">★</span>
+                    </div>
+                    <textarea placeholder="Comentários e sugestões de melhoria..." id="feedbackText"
+                        style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+                    <div class="button-group">
+                        <button class="btn" onclick="submitFeedback()">Enviar Feedback</button>
+                        <button class="btn-secondary btn" onclick="startOver()">Nova Análise</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPhase = 1;
+        let formData = {};
+        let currentRating = 0;
+
+        function updateProgress() {
+            const progress = (currentPhase - 1) * 25;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function nextPhase(phase) {
+            // Validar dados da fase atual
+            if (!validateCurrentPhase()) {
+                return;
+            }
+
+            // Salvar dados da fase atual
+            saveCurrentPhaseData();
+
+            // Atualizar UI
+            document.getElementById(`phase${currentPhase}`).classList.remove('active');
+            document.querySelector(`[data-phase="${currentPhase}"]`).classList.remove('active');
+            document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('completed');
+
+            currentPhase = phase;
+            document.getElementById(`phase${currentPhase}`).classList.add('active');
+            document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('active');
+
+            updateProgress();
+        }
+
+        function prevPhase(phase) {
+            document.getElementById(`phase${currentPhase}`).classList.remove('active');
+            document.querySelector(`[data-phase="${currentPhase}"]`).classList.remove('active');
+            document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('pending');
+
+            currentPhase = phase;
+            document.getElementById(`phase${currentPhase}`).classList.add('active');
+            document.querySelector(`[data-phase="${currentPhase}"]`).classList.remove('completed');
+            document.querySelector(`[data-phase="${currentPhase}"]`).classList.add('active');
+
+            updateProgress();
+        }
+
+        function validateCurrentPhase() {
+            switch (currentPhase) {
+                case 1:
+                    const requestText = document.getElementById('requestText').value.trim();
+                    const domain = document.getElementById('domain').value;
+                    const complexity = document.getElementById('complexity').value;
+                    const userLevel = document.getElementById('userLevel').value;
+
+                    if (!requestText || !domain || !complexity || !userLevel) {
+                        showToast('⚠️ Por favor, preencha todos os campos obrigatórios da Fase 1.', 'warning');
+                        return false;
+                    }
+                    break;
+                case 2:
+                    const outputFormat = document.getElementById('outputFormat').value;
+                    const tone = document.getElementById('tone').value;
+                    const length = document.getElementById('length').value;
+
+                    if (!outputFormat || !tone || !length) {
+                        showToast('⚠️ Por favor, preencha todos os campos obrigatórios da Fase 2.', 'warning');
+                        return false;
+                    }
+                    break;
+                case 3:
+                    const successCriteria = document.getElementById('successCriteria').value.trim();
+                    if (!successCriteria) {
+                        showToast('⚠️ Por favor, defina os critérios de sucesso na Fase 3.', 'warning');
+                        return false;
+                    }
+                    break;
+            }
+            return true;
+        }
+
+        function saveCurrentPhaseData() {
+            switch (currentPhase) {
+                case 1:
+                    formData.requestText = document.getElementById('requestText').value;
+                    formData.domain = document.getElementById('domain').value;
+                    formData.complexity = document.getElementById('complexity').value;
+                    formData.userLevel = document.getElementById('userLevel').value;
+                    formData.context = document.getElementById('context').value;
+                    break;
+                case 2:
+                    formData.outputFormat = document.getElementById('outputFormat').value;
+                    formData.tone = document.getElementById('tone').value;
+                    formData.length = document.getElementById('length').value;
+
+                    const techniques = [];
+                    document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                        techniques.push(cb.value);
+                    });
+                    formData.techniques = techniques;
+                    break;
+                case 3:
+                    formData.successCriteria = document.getElementById('successCriteria').value;
+                    formData.restrictions = document.getElementById('restrictions').value;
+                    formData.examples = document.getElementById('examples').value;
+                    break;
+            }
+        }
+
+        function generatePrompt() {
+            if (!validateCurrentPhase()) return;
+            saveCurrentPhaseData();
+
+            // Mostrar loading
+            document.getElementById('loadingSection').classList.add('show');
+            showToast('🔄 Processando sua solicitação...', 'info');
+
+            // Simular processamento
+            setTimeout(() => {
+                document.getElementById('loadingSection').classList.remove('show');
+
+                // Gerar diagnóstico
+                generateDiagnostic();
+
+                // Gerar prompt otimizado
+                const optimizedPrompt = createOptimizedPrompt();
+                document.getElementById('optimizedPrompt').textContent = optimizedPrompt;
+
+                // Gerar documentação
+                generateDocumentation();
+
+                // Gerar guia de personalização
+                generateCustomizationGuide();
+
+                // Gerar variações
+                generateAlternativeVersions();
+
+                // Gerar checklist
+                generateValidationChecklist();
+
+                // Mostrar resultados
+                document.getElementById('resultsSection').classList.add('show');
+                document.getElementById('feedbackSection').classList.add('show');
+
+                // Atualizar fase
+                nextPhase(4);
+
+                // Feedback de sucesso
+                showToast('🎉 Prompt gerado com sucesso!', 'success');
+            }, 3000);
+        }
+
+        function generateDiagnostic() {
+            const diagnosticHtml = `
+                <div class="diagnostic-item">
+                    <h4>Domínio Identificado</h4>
+                    <p><strong>${getDomainLabel(formData.domain)}</strong></p>
+                    <p>Especialização detectada com base na solicitação fornecida.</p>
+                </div>
+                <div class="diagnostic-item">
+                    <h4>Nível de Complexidade</h4>
+                    <p><strong>${getComplexityLabel(formData.complexity)}</strong></p>
+                    <p>Requer abordagem ${formData.complexity} com técnicas específicas.</p>
+                </div>
+                <div class="diagnostic-item">
+                    <h4>Perfil do Usuário</h4>
+                    <p><strong>Nível ${getUserLevelLabel(formData.userLevel)}</strong></p>
+                    <p>Linguagem e profundidade ajustadas para este perfil.</p>
+                </div>
+                <div class="diagnostic-item">
+                    <h4>Técnicas Aplicadas</h4>
+                    <p><strong>${formData.techniques.length} técnicas selecionadas</strong></p>
+                    <p>${formData.techniques.join(', ')}</p>
+                </div>
+            `;
+            document.getElementById('diagnosticResults').innerHTML = diagnosticHtml;
+        }
+
+        function createOptimizedPrompt() {
+            const persona = getPersonaByDomain(formData.domain);
+            const context = buildContext();
+            const instructions = buildInstructions();
+            const format = buildFormatInstructions();
+            const examples = formData.examples ? `\n\nEXEMPLOS PRÁTICOS:\n${formData.examples}` : '';
+            const constraints = formData.restrictions ? `\n\nRESTRIÇÕES E LIMITAÇÕES:\n${formData.restrictions}` : '';
+            const enhancedTask = enhanceTaskDescription();
+
+            return `🎯 PERSONA ESPECIALIZADA:
+${persona}
+
+📋 CONTEXTO OPERACIONAL:
+${context}
+
+⚡ METODOLOGIA DE EXECUÇÃO:
+${instructions}
+
+📊 ${format}
+
+✅ CRITÉRIOS DE VALIDAÇÃO:
+${formData.successCriteria}
+
+🎯 OBJETIVO PRINCIPAL:
+${enhancedTask}${examples}${constraints}
+
+🚀 AÇÃO SOLICITADA:
+Execute a tarefa seguindo rigorosamente todos os parâmetros acima, mantendo foco na qualidade, usabilidade e alinhamento com os objetivos especificados.`;
+        }
+
+        function enhanceTaskDescription() {
+            // Analisar e enriquecer a tarefa original com base no contexto
+            let enhancedTask = formData.requestText;
+
+            // Adicionar contexto específico baseado no domínio
+            if (formData.domain === 'comercial' && formData.requestText.toLowerCase().includes('site')) {
+                enhancedTask += `\n\n🎨 ESPECIFICAÇÕES TÉCNICAS ADICIONAIS:
+- Interface responsiva (mobile-first)
+- Sistema de carrinho de compras funcional
+- Páginas de produto individuais com especificações detalhadas
+- Sistema de busca e filtros
+- Processo de checkout simplificado
+- Integração com métodos de pagamento
+- Painel administrativo para gestão de produtos
+- Otimização SEO para mecanismos de busca`;
+            }
+
+            if (formData.context && formData.context.toLowerCase().includes('planeta')) {
+                enhancedTask += `\n\n🌌 DIRETRIZES TEMÁTICAS:
+- Design com tema espacial (cores escuras, elementos cósmicos)
+- Informações científicas precisas sobre cada planeta
+- Visualizações interativas ou imagens de alta qualidade
+- Categorização por características (rochosos, gasosos, habitáveis)
+- Comparativos entre planetas
+- Dados técnicos: distância do Sol, período orbital, composição atmosférica
+- Sistema de "favoritos" para planetas de interesse`;
+            }
+
+            return enhancedTask;
+        }
+
+        function getPersonaByDomain(domain) {
+            const personas = {
+                'tecnico': 'Você é um Arquiteto de Software Sênior com 10+ anos de experiência em desenvolvimento full-stack e arquitetura de sistemas escaláveis. Sua expertise combina conhecimento profundo em tecnologias modernas com capacidade de criar soluções robustas e bem documentadas.',
+                'criativo': 'Você é um Diretor Criativo e UX Designer com vasta experiência em campanhas premiadas, branding digital e design de interfaces. Sua visão combina inovação artística com usabilidade excepcional e resultados mensuráveis de negócio.',
+                'analitico': 'Você é um Cientista de Dados Sênior especializado em transformar dados complexos em insights acionáveis e visualizações impactantes. Sua abordagem combina rigor analítico com comunicação clara de resultados e recomendações estratégicas.',
+                'estrategico': 'Você é um Consultor Estratégico C-level com experiência comprovada em transformação digital e crescimento organizacional. Sua perspectiva integra visão de negócio holística com execução prática e mensuração de resultados.',
+                'educacional': 'Você é um Designer Instrucional e Especialista em Experiência de Aprendizagem com expertise em pedagogia moderna e tecnologias educacionais. Sua abordagem personaliza o ensino para máximo engajamento e retenção de conhecimento.',
+                'comercial': 'Você é um Growth Hacker e Especialista em E-commerce com track record comprovado em escalar negócios digitais do zero ao milhão. Sua estratégia combina métricas orientadas a dados, otimização de conversão e experiência excepcional do usuário.'
+            };
+            return personas[domain] || personas['tecnico'];
+        }
+
+        function buildContext() {
+            const contextParts = [
+                `📊 Domínio: ${getDomainLabel(formData.domain)}`,
+                `🔧 Nível de Complexidade: ${getComplexityLabel(formData.complexity)}`,
+                `👤 Perfil do Usuário Final: ${getUserLevelLabel(formData.userLevel)}`,
+                `🎨 Tom e Estilo: ${getToneLabel(formData.tone)}`,
+                `📏 Extensão Esperada: ${getLengthLabel(formData.length)}`
+            ];
+
+            if (formData.context) {
+                contextParts.push(`🌍 Contexto Específico: ${formData.context}`);
+            }
+
+            return contextParts.join('\n');
+        }
+
+        function buildInstructions() {
+            const instructions = [];
+
+            // Instruções baseadas nas técnicas selecionadas
+            if (formData.techniques.includes('chain-of-thought')) {
+                instructions.push('🧠 RACIOCÍNIO ESTRUTURADO: Demonstre seu processo de pensamento passo-a-passo');
+            }
+            if (formData.techniques.includes('few-shot')) {
+                instructions.push('💡 EXEMPLOS PRÁTICOS: Forneça exemplos concretos para ilustrar cada conceito');
+            }
+            if (formData.techniques.includes('role-playing')) {
+                instructions.push('🎭 CONSISTÊNCIA DE PERSONA: Mantenha o papel especializado durante toda a resposta');
+            }
+            if (formData.techniques.includes('step-by-step')) {
+                instructions.push('📋 ESTRUTURA SEQUENCIAL: Organize a resposta em etapas claras e lógicas');
+            }
+            if (formData.techniques.includes('examples')) {
+                instructions.push('🔍 APLICAÇÕES REAIS: Inclua casos de uso específicos e aplicáveis');
+            }
+            if (formData.techniques.includes('constraints')) {
+                instructions.push('⚠️ LIMITAÇÕES: Respeite rigorosamente todas as restrições especificadas');
+            }
+
+            // Instruções gerais sempre presentes
+            instructions.push(`🎯 QUALIDADE: Mantenha padrão ${getToneLabel(formData.tone).toLowerCase()} e profissional`);
+            instructions.push(`📝 EXTENSÃO: Produza resposta ${getLengthLabel(formData.length).toLowerCase()} e bem estruturada`);
+
+            // Instruções específicas por domínio
+            const domainInstructions = {
+                'tecnico': '💻 PRECISÃO TÉCNICA: Use terminologia correta e soluções testadas',
+                'criativo': '🎨 INOVAÇÃO: Explore soluções originais e visualmente atrativas',
+                'analitico': '📊 BASE DE DADOS: Fundamente decisões em análises e métricas',
+                'estrategico': '🎯 VISÃO HOLÍSTICA: Consider impact a longo prazo e objetivos globais',
+                'educacional': '📚 DIDÁTICA: Estruture para facilitar aprendizado e compreensão',
+                'comercial': '💰 FOCO EM RESULTADOS: Priorize ROI, conversão e experiência do usuário'
+            };
+
+            if (domainInstructions[formData.domain]) {
+                instructions.push(domainInstructions[formData.domain]);
+            }
+
+            return instructions.join('\n');
+        }
+
+        function buildFormatInstructions() {
+            const formatInstructions = {
+                'texto': '📄 FORMATO: Texto bem estruturado com parágrafos organizados, títulos claros e transições suaves entre ideias.',
+                'lista': '📋 FORMATO: Listas hierárquicas com tópicos, subtópicos e pontos de ação claros e objetivos.',
+                'tabela': '📊 FORMATO: Tabelas organizadas com cabeçalhos descritivos, dados estruturados e comparações claras.',
+                'json': '💾 FORMATO: JSON válido, bem formatado e documentado com estrutura lógica e campos autodescritivos.',
+                'markdown': '📝 FORMATO: Markdown completo com cabeçalhos (H1-H6), listas, links, código e formatação apropriada.',
+                'codigo': '💻 FORMATO: Código limpo, comentado, seguindo melhores práticas da linguagem com documentação inline.',
+                'relatorio': '📑 FORMATO: Relatório executivo com sumário, desenvolvimento estruturado, conclusões e recomendações.'
+            };
+
+            return formatInstructions[formData.outputFormat] || formatInstructions['texto'];
+        }
+
+        function generateDocumentation() {
+            const doc = `
+                <h4>Decisões de Design Tomadas:</h4>
+                <ul>
+                    <li><strong>Persona Selecionada:</strong> ${getPersonaByDomain(formData.domain).split('.')[0]} - Escolhida pela expertise no domínio ${getDomainLabel(formData.domain).toLowerCase()}</li>
+                    <li><strong>Técnicas Aplicadas:</strong> ${formData.techniques.join(', ') || 'Nenhuma específica'} - Selecionadas para otimizar a qualidade da resposta</li>
+                    <li><strong>Estrutura de Contexto:</strong> Inclui domínio, complexidade e perfil do usuário para direcionamento preciso</li>
+                    <li><strong>Formato de Saída:</strong> ${getFormatLabel(formData.outputFormat)} - Otimizado para o tipo de conteúdo solicitado</li>
+                </ul>
+                
+                <h4>Justificativas Técnicas:</h4>
+                <p>A estrutura do prompt foi otimizada considerando os princípios de clareza, especificidade e direcionamento contextual. 
+                A persona escolhida estabelece autoridade e tom apropriado, enquanto as instruções detalhadas garantem consistência na execução.</p>
+            `;
+            document.getElementById('processDocumentation').innerHTML = doc;
+        }
+
+        function generateCustomizationGuide() {
+            const guide = `
+                <h4>Como Personalizar Este Prompt:</h4>
+                <ol>
+                    <li><strong>Ajustar Persona:</strong> Modifique a seção PERSONA para especialidades específicas do seu domínio</li>
+                    <li><strong>Contexto Específico:</strong> Adicione detalhes únicos do seu caso de uso na seção CONTEXTO</li>
+                    <li><strong>Critérios Personalizados:</strong> Adapte os CRITÉRIOS DE SUCESSO para suas métricas específicas</li>
+                    <li><strong>Exemplos Específicos:</strong> Inclua exemplos do seu domínio na seção EXEMPLOS</li>
+                </ol>
+                
+                <h4>Variáveis Substituíveis:</h4>
+                <ul>
+                    <li><code>[DOMÍNIO]</code> - Substitua por sua área específica</li>
+                    <li><code>[PÚBLICO]</code> - Ajuste para seu público-alvo</li>
+                    <li><code>[RESTRIÇÕES]</code> - Adicione limitações específicas</li>
+                </ul>
+            `;
+            document.getElementById('customizationGuide').innerHTML = guide;
+        }
+
+        function generateAlternativeVersions() {
+            const version1 = createOptimizedPrompt().replace('INSTRUÇÕES DETALHADAS:', 'DIRETRIZES ESPECÍFICAS:');
+            const version2 = createOptimizedPrompt().replace('Você é um', 'Atue como um');
+
+            const versions = `
+                <h4>Versão Alternativa 1 - Foco em Diretrizes:</h4>
+                <pre style="max-height: 200px; overflow-y: auto;">${version1.substring(0, 300)}...</pre>
+                
+                <h4>Versão Alternativa 2 - Abordagem de Role-Play:</h4>
+                <pre style="max-height: 200px; overflow-y: auto;">${version2.substring(0, 300)}...</pre>
+                
+                <p><strong>Quando usar cada versão:</strong></p>
+                <ul>
+                    <li><strong>Versão 1:</strong> Para tarefas que requerem seguimento rigoroso de diretrizes</li>
+                    <li><strong>Versão 2:</strong> Para interações mais conversacionais e criativas</li>
+                </ul>
+            `;
+            document.getElementById('alternativeVersions').innerHTML = versions;
+        }
+
+        function generateValidationChecklist() {
+            const checklist = `
+                <h4>Critérios de Validação:</h4>
+                <div style="display: grid; gap: 10px;">
+                    <label><input type="checkbox"> A resposta mantém o tom ${getToneLabel(formData.tone).toLowerCase()} especificado</label>
+                    <label><input type="checkbox"> O formato de saída corresponde ao ${getFormatLabel(formData.outputFormat).toLowerCase()} solicitado</label>
+                    <label><input type="checkbox"> A extensão está adequada (${getLengthLabel(formData.length).toLowerCase()})</label>
+                    <label><input type="checkbox"> Os critérios de sucesso foram atendidos</label>
+                    <label><input type="checkbox"> As restrições foram respeitadas</label>
+                    <label><input type="checkbox"> O nível de complexidade é apropriado para ${getUserLevelLabel(formData.userLevel).toLowerCase()}</label>
+                    <label><input type="checkbox"> A persona se mantém consistente</label>
+                    <label><input type="checkbox"> As técnicas selecionadas foram aplicadas</label>
+                </div>
+                
+                <h4 style="margin-top: 20px;">Métricas de Qualidade:</h4>
+                <ul>
+                    <li><strong>Precisão:</strong> Elimina ambiguidades? ✓/✗</li>
+                    <li><strong>Completude:</strong> Aborda todas as dimensões? ✓/✗</li>
+                    <li><strong>Eficiência:</strong> Máximo resultado, mínimo esforço? ✓/✗</li>
+                    <li><strong>Escalabilidade:</strong> Permite adaptações futuras? ✓/✗</li>
+                </ul>
+            `;
+            document.getElementById('validationChecklist').innerHTML = checklist;
+        }
+
+        function getDomainLabel(domain) {
+            const labels = {
+                'tecnico': 'Técnico',
+                'criativo': 'Criativo',
+                'analitico': 'Analítico',
+                'estrategico': 'Estratégico',
+                'educacional': 'Educacional',
+                'comercial': 'Comercial'
+            };
+            return labels[domain] || domain;
+        }
+
+        function getComplexityLabel(complexity) {
+            const labels = {
+                'simples': 'Simples',
+                'intermediaria': 'Intermediária',
+                'complexa': 'Complexa',
+                'especializada': 'Especializada'
+            };
+            return labels[complexity] || complexity;
+        }
+
+        function getUserLevelLabel(level) {
+            const labels = {
+                'iniciante': 'Iniciante',
+                'intermediario': 'Intermediário',
+                'avancado': 'Avançado',
+                'especialista': 'Especialista'
+            };
+            return labels[level] || level;
+        }
+
+        function getToneLabel(tone) {
+            const labels = {
+                'profissional': 'Profissional',
+                'casual': 'Casual',
+                'tecnico': 'Técnico',
+                'criativo': 'Criativo',
+                'educativo': 'Educativo',
+                'persuasivo': 'Persuasivo'
+            };
+            return labels[tone] || tone;
+        }
+
+        function getFormatLabel(format) {
+            const labels = {
+                'texto': 'Texto corrido',
+                'lista': 'Lista estruturada',
+                'tabela': 'Tabela',
+                'json': 'JSON',
+                'markdown': 'Markdown',
+                'codigo': 'Código',
+                'relatorio': 'Relatório detalhado'
+            };
+            return labels[format] || format;
+        }
+
+        function getLengthLabel(length) {
+            const labels = {
+                'concisa': 'Concisa',
+                'media': 'Média',
+                'detalhada': 'Detalhada',
+                'extensa': 'Extensa'
+            };
+            return labels[length] || length;
+        }
+
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                console.error('Elemento não encontrado:', elementId);
+                showToast('❌ Erro: elemento não encontrado', 'error');
+                return;
+            }
+
+            const text = element.textContent || element.innerText;
+
+            if (!text || text.trim() === '') {
+                showToast('⚠️ Nenhum conteúdo para copiar', 'warning');
+                return;
+            }
+
+            // Método moderno (preferido)
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showCopySuccess();
+                }).catch(err => {
+                    console.error('Erro ao copiar (método moderno):', err);
+                    showToast('⚠️ Usando método alternativo de cópia...', 'info');
+                    fallbackCopyMethod(text);
+                });
+            } else {
+                // Método fallback para compatibilidade
+                showToast('ℹ️ Usando método alternativo de cópia...', 'info');
+                fallbackCopyMethod(text);
+            }
+        }
+
+        function fallbackCopyMethod(text) {
+            try {
+                // Criar elemento temporário
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.top = '0';
+                textArea.style.left = '0';
+                textArea.style.width = '2em';
+                textArea.style.height = '2em';
+                textArea.style.padding = '0';
+                textArea.style.border = 'none';
+                textArea.style.outline = 'none';
+                textArea.style.boxShadow = 'none';
+                textArea.style.background = 'transparent';
+                textArea.style.opacity = '0';
+
+                document.body.appendChild(textArea);
+
+                // Selecionar e copiar
+                textArea.focus();
+                textArea.select();
+                textArea.setSelectionRange(0, 99999); // Para mobile
+
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                if (successful) {
+                    showCopySuccess();
+                } else {
+                    throw new Error('Comando de cópia falhou');
+                }
+            } catch (err) {
+                console.error('Erro no método fallback:', err);
+                showToast('⚠️ Erro na cópia automática. Abrindo modal para cópia manual...', 'warning');
+                // Último recurso - mostrar modal com texto para cópia manual
+                showManualCopyModal(text);
+            }
+        }
+
+        function showCopySuccess() {
+            // Encontrar o botão que foi clicado
+            const buttons = document.querySelectorAll('button');
+            let targetButton = null;
+
+            buttons.forEach(btn => {
+                if (btn.textContent.includes('Copiar') && !btn.textContent.includes('Copiado')) {
+                    targetButton = btn;
+                }
+            });
+
+            if (targetButton) {
+                const originalText = targetButton.textContent;
+                const originalBg = targetButton.style.background;
+
+                targetButton.textContent = '✅ Copiado!';
+                targetButton.style.background = '#4CAF50';
+                targetButton.style.transform = 'scale(0.95)';
+
+                setTimeout(() => {
+                    targetButton.textContent = originalText;
+                    targetButton.style.background = originalBg;
+                    targetButton.style.transform = '';
+                }, 2000);
+            }
+
+            // Mostrar notificação toast
+            showToast('✅ Prompt copiado para área de transferência!', 'success');
+        }
+
+        function showManualCopyModal(text) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 20px;
+                box-sizing: border-box;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                max-width: 600px;
+                width: 100%;
+                max-height: 80vh;
+                overflow-y: auto;
+            `;
+
+            content.innerHTML = `
+                <h3 style="margin-top: 0; color: #667eea;">📋 Copiar Prompt Manualmente</h3>
+                <p>Selecione todo o texto abaixo e copie (Ctrl+C ou Cmd+C):</p>
+                <textarea readonly style="width: 100%; height: 200px; padding: 10px; border: 2px solid #667eea; border-radius: 8px; font-family: monospace; font-size: 12px;">${text}</textarea>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button onclick="this.closest('[style*=\"position: fixed\"]').remove()" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Fechar</button>
+                </div>
+            `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+
+            // Selecionar automaticamente o texto
+            const textarea = content.querySelector('textarea');
+            textarea.focus();
+            textarea.select();
+        }
+
+        function showToast(message, type = 'success') {
+            // Remover toast existente
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+
+            // Definir cores baseadas no tipo
+            const colors = {
+                'success': '#4CAF50',
+                'warning': '#FF9800',
+                'error': '#F44336',
+                'info': '#2196F3'
+            };
+
+            const bgColor = colors[type] || colors.success;
+
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-weight: 500;
+                animation: slideInRight 0.3s ease-out;
+                max-width: 350px;
+                word-wrap: break-word;
+            `;
+
+            // Adicionar animação CSS
+            if (!document.querySelector('#toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'toast-styles';
+                style.textContent = `
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOutRight {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // Remover após 4 segundos para warnings e errors
+            const duration = (type === 'warning' || type === 'error') ? 5000 : 3000;
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+
+        // Rating system
+        document.getElementById('ratingStars').addEventListener('click', (e) => {
+            if (e.target.classList.contains('star')) {
+                const rating = parseInt(e.target.dataset.rating);
+                currentRating = rating;
+
+                document.querySelectorAll('.star').forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.add('active');
+                    } else {
+                        star.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        function submitFeedback() {
+            const feedbackText = document.getElementById('feedbackText').value;
+            const rating = currentRating;
+
+            if (rating === 0) {
+                showToast('⚠️ Por favor, selecione uma avaliação.', 'warning');
+                return;
+            }
+
+            // Simular envio de feedback
+            showToast(`✅ Feedback enviado! Avaliação: ${rating}/5 estrelas.\nObrigado por contribuir para melhorar o PromptForge!`, 'success');
+
+            // Reset feedback
+            document.getElementById('feedbackText').value = '';
+            document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
+            currentRating = 0;
+        }
+
+        function startOver() {
+            // Reset all data
+            formData = {};
+            currentRating = 0;
+            currentPhase = 1;
+
+            // Reset form fields
+            document.querySelectorAll('input, textarea, select').forEach(field => {
+                if (field.type === 'checkbox') {
+                    field.checked = false;
+                } else {
+                    field.value = '';
+                }
+            });
+
+            // Reset UI
+            document.querySelectorAll('.phase-content').forEach(phase => {
+                phase.classList.remove('active');
+            });
+            document.querySelectorAll('.phase-step').forEach(step => {
+                step.classList.remove('active', 'completed');
+                step.classList.add('pending');
+            });
+
+            // Reset results
+            document.getElementById('resultsSection').classList.remove('show');
+            document.getElementById('feedbackSection').classList.remove('show');
+
+            // Start from phase 1
+            document.getElementById('phase1').classList.add('active');
+            document.querySelector('[data-phase="1"]').classList.remove('pending');
+            document.querySelector('[data-phase="1"]').classList.add('active');
+
+            updateProgress();
+
+            // Smooth scroll to top
+            document.querySelector('.main-card').scrollIntoView({ behavior: 'smooth' });
+
+            // Feedback visual
+            showToast('🔄 Nova análise iniciada!', 'info');
+        }
+
+        // Initialize progress on page load
+        updateProgress();
+
+        // Add smooth scrolling for phase transitions
+        function smoothScrollToTop() {
+            document.querySelector('.phase-indicator').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        // Adicionar validação em tempo real para campos obrigatórios
+        function addRealTimeValidation() {
+            const requiredFields = document.querySelectorAll('input[required], textarea[required], select[required]');
+
+            requiredFields.forEach(field => {
+                field.addEventListener('blur', function () {
+                    if (!this.value.trim()) {
+                        this.style.borderColor = '#F44336';
+                        this.style.boxShadow = '0 0 0 3px rgba(244, 67, 54, 0.1)';
+                    } else {
+                        this.style.borderColor = '#4CAF50';
+                        this.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
+                    }
+                });
+
+                field.addEventListener('input', function () {
+                    if (this.value.trim()) {
+                        this.style.borderColor = '#667eea';
+                        this.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    }
+                });
+            });
+        }
+
+        // Adicionar atributos required aos campos obrigatórios
+        function markRequiredFields() {
+            // Fase 1
+            document.getElementById('requestText').setAttribute('required', 'required');
+            document.getElementById('domain').setAttribute('required', 'required');
+            document.getElementById('complexity').setAttribute('required', 'required');
+            document.getElementById('userLevel').setAttribute('required', 'required');
+
+            // Fase 2
+            document.getElementById('outputFormat').setAttribute('required', 'required');
+            document.getElementById('tone').setAttribute('required', 'required');
+            document.getElementById('length').setAttribute('required', 'required');
+
+            // Fase 3
+            document.getElementById('successCriteria').setAttribute('required', 'required');
+        }
+
+        // Enhance phase transitions with smooth scrolling
+        const originalNextPhase = nextPhase;
+        const originalPrevPhase = prevPhase;
+
+        nextPhase = function (phase) {
+            originalNextPhase(phase);
+            setTimeout(smoothScrollToTop, 100);
+        };
+
+        prevPhase = function (phase) {
+            originalPrevPhase(phase);
+            setTimeout(smoothScrollToTop, 100);
+        };
+
+        // Inicializar funcionalidades quando a página carregar
+        document.addEventListener('DOMContentLoaded', function () {
+            markRequiredFields();
+            addRealTimeValidation();
+        });
+    </script>
+</body>
+
+</html>
