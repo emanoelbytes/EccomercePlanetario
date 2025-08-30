@@ -1,0 +1,1191 @@
+/* ========================================
+   PROMPTFORGE - FRAMEWORK DE ARQUITETURA DE PROMPTS
+   Versão: 2.0.0
+   Autor: PromptForge Team
+   ======================================== */
+
+/* ========================================
+   RESET E CONFIGURAÇÕES GERAIS
+   ======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* ========================================
+   LAYOUT E CONTAINER
+   ======================================== */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ========================================
+   HEADER E TÍTULO
+   ======================================== */
+.header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: slideDown 0.8s ease-out;
+}
+
+.header h1 {
+    font-size: 3rem;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.header h1::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: headerShimmer 3s infinite;
+}
+
+@keyframes headerShimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+.header .tagline {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.2rem;
+    font-weight: 300;
+}
+
+/* ========================================
+   CARD PRINCIPAL
+   ======================================== */
+.main-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+    position: relative;
+    overflow: hidden;
+}
+
+.main-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.main-card:hover::before {
+    opacity: 1;
+}
+
+/* ========================================
+   INDICADORES DE FASE
+   ======================================== */
+.phase-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    gap: 10px;
+}
+
+.phase-step {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.phase-step::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+}
+
+.phase-step:hover::before {
+    opacity: 0.3;
+}
+
+.phase-step.active {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    transform: scale(1.1);
+}
+
+.phase-step.completed {
+    background: #4CAF50;
+    color: white;
+}
+
+.phase-step.pending {
+    background: #f0f0f0;
+    color: #999;
+}
+
+/* ========================================
+   BARRA DE PROGRESSO
+   ======================================== */
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e0e0e0;
+    border-radius: 3px;
+    margin: 20px 0;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.5s ease;
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+}
+
+/* ========================================
+   CONTEÚDO DAS FASES
+   ======================================== */
+.phase-content {
+    display: none;
+    animation: slideIn 0.5s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.phase-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.01), rgba(118, 75, 162, 0.01));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.phase-content.active {
+    display: block;
+}
+
+.phase-content.active::before {
+    opacity: 1;
+}
+
+.phase-content.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border-radius: 2px;
+    animation: slideInRight 0.5s ease-out;
+}
+
+/* ========================================
+   FORMULÁRIOS
+   ======================================== */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #444;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    position: relative;
+}
+
+.form-group label::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+.form-group:focus-within label::after {
+    width: 100%;
+}
+
+.form-group:focus-within label {
+    color: #667eea;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+    position: relative;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #999;
+    transition: color 0.3s ease;
+}
+
+.form-group input:focus::placeholder,
+.form-group textarea:focus::placeholder {
+    color: #667eea;
+    opacity: 0.7;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Melhorias de acessibilidade */
+.form-group input:invalid,
+.form-group textarea:invalid,
+.form-group select:invalid {
+    border-color: #F44336;
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+.form-group input:valid,
+.form-group textarea:valid,
+.form-group select:valid {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+/* ========================================
+   CHECKBOXES E TÉCNICAS
+   ======================================== */
+.form-group div[style*="grid"] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-group div[style*="grid"] label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.form-group div[style*="grid"] label:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+.form-group div[style*="grid"] input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #667eea;
+}
+
+/* ========================================
+   BOTÕES
+   ======================================== */
+.btn {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+    margin-right: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-secondary:hover::before {
+    left: 100%;
+}
+
+/* ========================================
+   SEÇÃO DE RESULTADOS
+   ======================================== */
+.results-section {
+    display: none;
+    margin-top: 30px;
+    padding: 30px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    border-left: 5px solid #667eea;
+    position: relative;
+    overflow: hidden;
+}
+
+.results-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.results-section.show {
+    display: block;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.results-section.show::before {
+    opacity: 1;
+}
+
+.results-section:hover::before {
+    opacity: 1;
+}
+
+/* ========================================
+   CARDS DE RESULTADO
+   ======================================== */
+.result-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.result-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.result-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.result-card:hover::before {
+    opacity: 1;
+}
+
+.result-card h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+}
+
+.result-card pre {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    position: relative;
+    border: 1px solid #e9ecef;
+}
+
+.result-card pre::before {
+    content: '📋';
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: white;
+    padding: 0 5px;
+    font-size: 12px;
+    color: #667eea;
+}
+
+/* ========================================
+   SEÇÃO DE LOADING
+   ======================================== */
+.loading {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    position: relative;
+}
+
+.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    border-radius: 15px;
+}
+
+.loading.show {
+    display: block;
+}
+
+.loading.show::before {
+    opacity: 1;
+}
+
+/* ========================================
+   SPINNER DE LOADING
+   ======================================== */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+    position: relative;
+}
+
+.spinner::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid transparent;
+    border-top: 2px solid rgba(102, 126, 234, 0.3);
+    border-radius: 50%;
+    animation: spin 1.5s linear infinite reverse;
+}
+
+/* ========================================
+   GRID DE DIAGNÓSTICO
+   ======================================== */
+.diagnostic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.diagnostic-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.diagnostic-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.diagnostic-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.diagnostic-item:hover::before {
+    opacity: 1;
+}
+
+.diagnostic-item h4 {
+    color: #667eea;
+    margin-bottom: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.diagnostic-item h4::before {
+    content: '🔍';
+    font-size: 14px;
+}
+
+/* ========================================
+   SEÇÃO DE FEEDBACK
+   ======================================== */
+.feedback-section {
+    margin-top: 30px;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    display: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.feedback-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+}
+
+.feedback-section.show {
+    display: block;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.feedback-section.show::before {
+    opacity: 1;
+}
+
+/* ========================================
+   SISTEMA DE AVALIAÇÃO
+   ======================================== */
+.rating-stars {
+    display: flex;
+    gap: 5px;
+    margin: 15px 0;
+}
+
+.star {
+    font-size: 24px;
+    color: #ddd;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.star:hover,
+.star.active {
+    color: #ffd700;
+    transform: scale(1.2);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.star::before {
+    content: '★';
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s ease;
+}
+
+.star:hover::before,
+.star.active::before {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ========================================
+   GRUPO DE BOTÕES
+   ======================================== */
+.button-group {
+    margin-top: 20px;
+}
+
+/* ========================================
+   ANIMAÇÕES
+   ======================================== */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   RESPONSIVIDADE - DESKTOP
+   ======================================== */
+@media (max-width: 1200px) {
+    .container {
+        max-width: 95%;
+        padding: 15px;
+    }
+
+    .diagnostic-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   RESPONSIVIDADE - TABLET
+   ======================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        max-width: 90%;
+        padding: 15px;
+    }
+
+    .main-card {
+        padding: 35px 25px;
+    }
+
+    .diagnostic-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+    }
+
+    .form-group div[style*="grid"] {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .btn {
+        width: auto;
+        display: inline-block;
+    }
+}
+
+/* ========================================
+   RESPONSIVIDADE - MOBILE
+   ======================================== */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    .header {
+        margin-bottom: 25px;
+    }
+
+    .header h1 {
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+    }
+
+    .header .tagline {
+        font-size: 1rem;
+    }
+
+    .main-card {
+        padding: 20px 15px;
+        border-radius: 15px;
+    }
+
+    .phase-indicator {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 25px;
+    }
+
+    .phase-step {
+        width: 35px;
+        height: 35px;
+        font-size: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 10px 12px;
+        font-size: 15px;
+        border-radius: 8px;
+    }
+
+    .form-group textarea {
+        min-height: 100px;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        font-size: 14px;
+        border-radius: 20px;
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .btn-secondary {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    .result-card {
+        padding: 20px 15px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+    }
+
+    .result-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .result-card pre {
+        padding: 12px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+
+    .diagnostic-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .diagnostic-item {
+        padding: 12px;
+        border-radius: 8px;
+    }
+
+    .diagnostic-item h4 {
+        font-size: 0.95rem;
+        margin-bottom: 6px;
+    }
+
+    .diagnostic-item p {
+        font-size: 0.9rem;
+    }
+
+    .loading {
+        padding: 30px 15px;
+    }
+
+    .loading p {
+        font-size: 0.9rem;
+    }
+
+    .results-section {
+        padding: 20px 15px;
+        margin-top: 20px;
+    }
+
+    .feedback-section {
+        padding: 20px 15px;
+        margin-top: 20px;
+    }
+
+    .rating-stars {
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .star {
+        font-size: 28px;
+    }
+
+    /* Ajustes para técnicas em grid */
+    .form-group div[style*="grid"] {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .form-group div[style*="grid"] label {
+        font-size: 14px;
+        padding: 8px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-group div[style*="grid"] input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+    }
+}
+
+/* ========================================
+   RESPONSIVIDADE - MOBILE PEQUENO
+   ======================================== */
+@media (max-width: 480px) {
+    .container {
+        padding: 8px;
+    }
+
+    .header h1 {
+        font-size: 1.8rem;
+    }
+
+    .header .tagline {
+        font-size: 0.9rem;
+    }
+
+    .main-card {
+        padding: 15px 10px;
+        border-radius: 12px;
+    }
+
+    .phase-indicator {
+        gap: 6px;
+        margin-bottom: 20px;
+    }
+
+    .phase-step {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+
+    .result-card {
+        padding: 15px 10px;
+    }
+
+    .result-card h3 {
+        font-size: 1rem;
+    }
+
+    .result-card pre {
+        padding: 10px;
+        font-size: 12px;
+        max-height: 150px;
+    }
+
+    .diagnostic-item {
+        padding: 10px;
+    }
+
+    .star {
+        font-size: 24px;
+    }
+
+    /* Melhor organização dos botões em mobile */
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .button-group .btn {
+        width: 100%;
+        margin: 0;
+    }
+}
+
+/* ========================================
+   RESPONSIVIDADE - MOBILE MUITO PEQUENO
+   ======================================== */
+@media (max-width: 320px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .main-card {
+        padding: 12px 8px;
+    }
+
+    .phase-step {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        font-size: 13px;
+        padding: 7px 9px;
+    }
+
+    .btn {
+        font-size: 12px;
+        padding: 9px 18px;
+    }
+}
+
+/* ========================================
+   RESPONSIVIDADE - TELAS GRANDES
+   ======================================== */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1400px;
+    }
+
+    .main-card {
+        padding: 50px;
+    }
+
+    .diagnostic-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+
+    .form-group div[style*="grid"] {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* ========================================
+   OTIMIZAÇÕES PARA TOUCH
+   ======================================== */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        min-height: 48px;
+        touch-action: manipulation;
+    }
+
+    .phase-step {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .star {
+        min-height: 44px;
+        min-width: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        min-height: 44px;
+    }
+}
